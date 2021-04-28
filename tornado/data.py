@@ -45,4 +45,5 @@ c.execute('''create table Conversation(
 print("Table create successfully!")
 # 数据生成文件，只运行一次，目的是在指定目录下生成所要使用的数据库文件
 # nohup python3 -u main.py > /NEUIM/test.log 2>&1 &
+#45
 # ps -aux | grep "python3 -u test.py"
