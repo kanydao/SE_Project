@@ -1,7 +1,9 @@
 import tools
-
+message_account = 0;
+# 用来不断自动更新消息的序号，消息的_id作为消息存储的唯一标识
 
 def message(conn, data,client):
+    global message_account
     if tools.whether_miss(data, ['s_account', 'r_account', 'g_account', 'is_group', 'content', 'date']):
         return {
             'function': 'message',
@@ -42,9 +44,14 @@ def message(conn, data,client):
     else:
         # 当前用户不在线，需要存储到数据库中，然后在该用户上线的时候，将数据库中对应的消息发送出去
         cur = conn.cursor()
-        sql = '''INSERT INTO Conversation (_id,owner,account,) VALUES('{}','{}','{}','{}','{}','{}')'''.format(
-            1, account, data['password'], data['username'], data['icon'], data['mail'])
+        message_account +=1
+        # 每次需要存储一个消息时，对应的位置自动+1
+        # 统一存储成非群消息格式
+        sql = '''INSERT INTO Message (_id,s_account,r_account,is_group,content,create_date) VALUES('{}','{}','{}','{}','{}','{}')'''.format(
+            message_account, data['s_account'], data['r_account'], 0, data['content'], data['date'])
         cur.execute(sql)
         conn.commit()
         cur.close()
+        # 存储完成
+        # 注意在登录时，需要再读一下，如果又相应的信息，需要再发送给客户端
 

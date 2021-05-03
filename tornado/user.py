@@ -2,7 +2,6 @@ import tools
 import json
 import sqlite3
 
-# 目前已经通过的模块:login,register
 
 
 # 均以json的形式统一进行返回
@@ -57,11 +56,25 @@ def login(conn, data):
         print(res2)
         res["friend"] = res2
         # 需要匹配好account和对应的ip
+        # 'rec_message'表示没在线时，其他用户发过来的消息
+
+        #用来查找历史存留的消息
+
+        sql4 = '''SELECT * FROM  Message WHERE  r_account = {}'''.format(data['account'])
+        cur2 = conn.cursor()
+        cur2.execute(sql4)
+        # conn.row_factory = tools.sqlite_dict
+        # 注意fetchone()只返回符合条件的查找的第一项，应该使用fetchall()将所有符合条件的全部查询出来
+        res2 = cur2.fetchall()
+        cur2.close()
+
+
         return {
             'function': 'login',
             'error_code': 0,
             'error_message': '',
-            'data':res
+            'data':res,
+            'rec_message':res2
         },True
 
 
@@ -129,6 +142,8 @@ def exit_s(conn, data):
         conn.commit()
         cur.close()  # 关闭数据库的连接
 
+
+#------------------------------------------------罗康编辑部分--------------------------------------------------
 
 #conn是对数据库的连接的对象，data为前端传过来的信息
 def search_user(conn,data):

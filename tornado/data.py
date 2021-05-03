@@ -21,17 +21,17 @@ c.execute('''create table Friend
         primary key (account_1,account_2)
 );''')
 # 3.消息表
+# 修改消息表的构成---->群消息部分先忽略,统一存为0
+# 注意_id作为消息表的唯一表示，用来标注唯一消息
+# 日期统一存成字符串的格式
 c.execute('''create table Message
     (
         _id int primary  key not null ,
-        owner message_text not null,
-        direct int not null ,
-        account message_text not null ,
-        type int not null ,
+        s_account message_text not null ,
+        r_account message_text not null ,
+        is_group int not null,
         content text not null,
-        state int not null,
-        read int not null,
-        create_time int not null);''')
+        create_date message_text not null);''')
 # 4.会话表，显示的好友聊表那片
 c.execute('''create table Conversation(
         _id int primary  key not null ,
@@ -45,5 +45,4 @@ c.execute('''create table Conversation(
 print("Table create successfully!")
 # 数据生成文件，只运行一次，目的是在指定目录下生成所要使用的数据库文件
 # nohup python3 -u main.py > /NEUIM/test.log 2>&1 &
-#45
 # ps -aux | grep "python3 -u test.py"
