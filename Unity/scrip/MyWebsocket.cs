@@ -20,13 +20,13 @@ public class MyWebSocket
         }
     }
 
-    string address = "ws://60.205.178.57:8888/main";
+    string address = "ws://8.140.2.201:8000/main";
     public WebSocket webSocket;
     string meg_send = string.Empty;
     string meg_receive = string.Empty;
 
 
-    private MyWebSocket(string address = "ws://60.205.178.57:8888/main")
+    private MyWebSocket(string address = "ws://8.140.2.201:8000/main")
     {
         //创建websocket单例
         webSocket = new WebSocket(new Uri(address));
@@ -53,6 +53,7 @@ public class MyWebSocket
     //判断是否开始链接
     public bool IsConnected()
     {
+        //return true;
         return webSocket.IsOpen;
     }
 
@@ -65,37 +66,90 @@ public class MyWebSocket
     //登录函数
     public void Login(string id, string password)
     {
+        JsonData loginSendJson = new JsonData();
+        loginSendJson["function"] = "login";
+        JsonData loginSendDataJson = new JsonData();
+        loginSendDataJson["account"] = id;
+        loginSendDataJson["password"] = GetMD5(password);
+        loginSendJson["data"] = loginSendDataJson;
 
+        Debug.Log("发送："+loginSendJson.ToJson());
+        webSocket.Send(loginSendJson.ToJson());
     }
 
     //注册函数
-    public void Register(string nickname, string password, string email)
+    public void Register(string name, string password, string email)
     {
-
-    }
-
-    //发送消息
-    public void SendMessage(string message)
-    {
+        JsonData registerJson = new JsonData();
+        registerJson["function"] = "register";
+        JsonData dataJson = new JsonData();
+        dataJson["username"] = name;
+        dataJson["password"] = GetMD5(password);
+        dataJson["mail"] = email;
+        dataJson["icon"] = 1;
+        registerJson["data"] = dataJson;
+        Debug.Log("发送：" + registerJson.ToJson());
+        webSocket.Send(registerJson.ToJson());
         
     }
 
-    //添加好友
-    public void AddFriend()
+    //发送消息
+    public void SendMessage(string id,string message)
     {
+        JsonData sendJson = new JsonData();
+        sendJson["function"] = "message";
+        JsonData dataJson = new JsonData();
+        dataJson["s_account"] = User.Instance.id;
+        dataJson["r_account"] = id;
+        dataJson["g_account"] = "";
+        dataJson["is_group"] = 0;
+        dataJson["content"] = message;
+        dataJson["date"] = System.DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
+        sendJson["data"] = dataJson;
+
+        Debug.Log("发送：" + sendJson.ToJson());
+        webSocket.Send(sendJson.ToJson());
+
+    }
+
+    //添加好友
+    public void AddFriend(string id)
+    {
+        JsonData addJson = new JsonData();
+        addJson["function"] = "add_friend";
+        JsonData dataJson = new JsonData();
+        dataJson["account"] = id;
+        addJson["data"] = dataJson;
+
+        Debug.Log("发送：" + addJson.ToJson());
+        webSocket.Send(addJson.ToJson());
 
     }
 
     //搜索好友
-    public void SearchFriend()
+    public void SearchFriend(string id)
     {
+        JsonData searchJson = new JsonData();
+        searchJson["function"] = "search_user";
+        JsonData dataJson = new JsonData();
+        dataJson["account"] = id;
+        searchJson["data"] = dataJson;
 
+        Debug.Log("发送：" + searchJson.ToJson());
+        webSocket.Send(searchJson.ToJson());
     }
 
     //删除好友
-    public void DeleteFriend()
+    public void DeleteFriend(string id)
     {
+        JsonData deleteJson = new JsonData();
+        deleteJson["function"] = "delete_friend";
+        JsonData dataJson = new JsonData();
+        dataJson["account"] = id;
+        deleteJson["data"] = dataJson;
 
+        Debug.Log("发送：" + deleteJson.ToJson());
+        webSocket.Send(deleteJson.ToJson());
     }
 
 
@@ -124,7 +178,7 @@ public class MyWebSocket
     }
 
     //发生错误回调函数
-    void OnError(WebSocket ws, Exception ex)
+    public void OnError(WebSocket ws, Exception ex)
     {
         string errorMsg = string.Empty;
 #if !UNITY_WEBGL || UNITY_EDITOR

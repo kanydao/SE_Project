@@ -3,11 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class FriendListItem : MonoBehaviour
+public class AddScrollItem : MonoBehaviour
 {
-    public Image iconImage;
-    public Text nameText;
-    public string id;
+    public Text name_text;
+    public Text id_text;
+    public Image icon_image;
+    private string id;
+    
+
+    public void Set(string id,string name)
+    {
+        this.id = id;
+        this.name = name;
+        name_text.text = name;
+        id_text.text = "id:"+id;
+    }
 
     public void SetIcon(User.Icon icon)
     {
@@ -29,18 +39,12 @@ public class FriendListItem : MonoBehaviour
             default:
                 return;
         }
-        iconImage.overrideSprite = iconSprite;
-
+        icon_image.overrideSprite = iconSprite;
     }
 
-    public void Set(string name,string id)
+    public void AddButtonOnClick()
     {
-        nameText.text = name;
-        this.id = id;
-    }
-
-    public void OnClick()
-    {
-        chat_control.Instance.UpdateFriendInformation(id);
+        MyWebSocket myWebSocket = MyWebSocket.Instance;
+        myWebSocket.AddFriend(id);
     }
 }

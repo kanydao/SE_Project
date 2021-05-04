@@ -14,6 +14,7 @@ public class User
         public string id;
         public string name;
         public Icon icon;
+        public int state;
     }
 
     /// <summary>
@@ -86,6 +87,8 @@ public class User
     /// <returns></returns>
     public Talk FindTalk(string id)
     {
+        if (talkList == null)
+            return null;
         foreach(Talk talk in talkList)
         {
             if (talk.friend_id == id)
@@ -100,6 +103,8 @@ public class User
     /// <returns></returns>
     public Friend FindFriend(string id)
     {
+        if (friendList == null)
+            return null;
         foreach(Friend friend in friendList)
         {
             if (friend.id == id)

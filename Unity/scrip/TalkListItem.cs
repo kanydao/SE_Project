@@ -10,9 +10,10 @@ public class TalkListItem : MonoBehaviour
     public Text messageText;
     public Text timeText;
     public Image iconImage;
+    public Image newImage;
 
     //用户id
-    private string id;
+    public string id;
 
     /// <summary>
     /// 初始化的过程中
@@ -28,8 +29,12 @@ public class TalkListItem : MonoBehaviour
             nameText.text = name;
         if (message != null)
             messageText.text = message;
+        else
+            messageText.text = "";
         if (time != null)
             timeText.text = time;
+        else
+            timeText.text = "";
     }
 
     /// <summary>
@@ -66,8 +71,18 @@ public class TalkListItem : MonoBehaviour
     /// </summary>
     public void OnClick()
     {
+        SetNew(false);
+        chat_control.Instance.ChatButtonOnClick();
         chat_control.Instance.UpdateMessageScroll(id);
-        
+    }
+
+    /// <summary>
+    /// 设置是否有新消息提示
+    /// </summary>
+    /// <param name="is_new"></param>
+    public void SetNew(bool is_new)
+    {
+        newImage.gameObject.SetActive(is_new);
     }
 
 }
