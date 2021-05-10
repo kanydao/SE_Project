@@ -35,13 +35,3 @@ def sqlite_dict(obj_cursor):
         list.append(text)
     # 返回列表
     return list
-
-
-# 用来查询，好友列表中是否有发消息的用户
-def check_friend(friend,f_list):
-    flag = False
-    for it in f_list:
-        if friend == it['account']:
-            flag = True
-            break
-    return flag

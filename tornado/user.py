@@ -1,7 +1,6 @@
 import tools
-import json
-import sqlite3
 
+# 目前已经通过的模块:login,register
 
 
 # 均以json的形式统一进行返回
@@ -77,7 +76,6 @@ def login(conn, data):
             'rec_message':res2
         },True
 
-
 # 用户注册----该模块json文件测试完毕，没有问题
 def register(conn,data):
     if tools.whether_miss(data,['username','password','mail','icon']):
@@ -100,7 +98,6 @@ def register(conn,data):
     cur = conn.cursor()
     cur.execute(sql)
     res = cur.fetchone()  # 去数据库中查询相应的数据
-    # 注意需要返回的对象,需要返回到特定的用户手中
     if res is not  None:
         cur.close()
         return{
@@ -143,30 +140,30 @@ def exit_s(conn, data):
         cur.close()  # 关闭数据库的连接
 
 
-#------------------------------------------------罗康编辑部分--------------------------------------------------
-
 #conn是对数据库的连接的对象，data为前端传过来的信息
 def search_user(conn,data):
     c=conn.cursor()
-    sql="select username,account,icon from User where account={}%".format(data['account'])
+    #print(data['account'])
+    sql="select username,account,icon from User where account like '{}%%%%'".format(data['account'])
     c.execute(sql)
     #将所有的数据据查询出来
     res=c.fetchall()
+    print(res)
     #如果返回为空，则直接返回空就行
-    if res==None:
+    if res.__len__()==0:
         response={
     "function":"search_user",
     "error_code": 301,
     "error_message":"查找结果为空",
     "data":None
        }
-        return json.dumps(response)
+        return response
     else:
         user_response=list()
         for user in res:
-            account=user[0]
-            username=user[1]
-            icon=user[2]
+            account=user['username']
+            username=user['account']
+            icon=user['icon']
             user_message={
                 "username": account,
                 "account":username ,
@@ -182,75 +179,94 @@ def search_user(conn,data):
             "result":user_response
         }
     }
-        return json.dumps(response)
+        return response
 ##操作完成以后，需要修改好友表中的相应数据
-def add_friend(conn,data):
+def add_friend(conn,data,account):
     c=conn.cursor()
-    user_request=data['account_request']   #请求者的id
-    user_friend=data['account_friend']    #想要添加的用户的用户id
+    user_request=account   #请求者的id
+    print(account)
+    user_friend=data['account']    #想要添加的用户的用户id
+    print(user_friend)
     #首先对好友表进行查询，如果查询成功，则表明两个人已经是好友关系，则直接向请求端发送消息即可
     #如果查询失败，则表明两个还不是好友关系，则需要继续查询用户表，找到用户表中被添加者的信息，并且修改数据库
-    sql="select {} from Friend where account_1={}".format(user_friend,user_request)
+    sql="select * from Friend where account_1='{}' and account_2='{}'".format(user_friend,user_request)
     c.execute(sql)
     res=c.fetchone()
-    if res==None:
-        return json.dumps({
+    print(res)
+    if res!=None:
+        return {
             "function": "add_friend",
             "error_code": 401,
             "error_message": "已经是好友",
             "data": None
-        })
+        }
     else:
-        sql="select username,account,icon,state from User where account={}".format(data['user_friend'])
-        c.execute(sql)
-        res=c.fetchone()
+        #查询
+        sql1="select username,account,icon,state from User where account={}".format(user_friend)
+        c.execute(sql1)
+        res1=c.fetchone()
         #如果查询不存在，则直接返回用户不存在的信息即可
-        if res==None:
-            return json.dumps({
+        if res1==None:
+            return {
                 "function": "add_friend",
                 "error_code": 402,
-                "error_message": "已经是好友",
+                "error_message": "账号不存在",
                 "data": None
-            })
+            }
         else:
+            sql2 = "select username,account,icon,state from User where account={}".format(user_request)
+            c.execute(sql2)
+            res2 = c.fetchone()
         #表明已经查询成功，需要重新对数据库进行操作
-            c.execute("insert into Friend values (?,?)",user_request,user_friend)
-            c.execute("insert into Friend values (?,?)",user_friend,user_request)
-            return json.dumps({
+            c.execute("insert into Friend values ('{}','{}')".format(user_request,user_friend))
+            c.execute("insert into Friend values ('{}','{}')".format(user_friend,user_request))
+            conn.commit()
+            return {
                 "function": "add_friend",
                 "error_code": 0,
                 "error_message": "",
                 "data":
                     {
-                        "account": res[1],
-                        "username":res[0],
-                        "icon": res[2],
-                        "state":res[3]
+                        "account": res1['account'],
+                        "username":res1['username'],
+                        "icon": res1['icon'],
+                        "state":res1['state']
                  }
-            })
+            },{
+                "function": "add_friend",
+                "error_code": 0,
+                "error_message": "",
+                "data":
+                    {
+                        "account": res2['account'],
+                        "username":res2['username'],
+                        "icon": res2['icon'],
+                        "state":res2['state']
+                 }
+            }
 
-def delete_friends(conn,data):
+def delete_friend(conn,data,account):
     c = conn.cursor()
-    user_request = data['account_request']  # 请求者的id
-    user_friend = data['account_friend']  # 被删除的用户的用户id
+    user_request = account  # 请求者的id
+    user_friend = data['account']  # 被删除的用户的用户id
     # 首先对好友表进行查询，如果查询成功，则进行删除操作
     # 如果查询失败，则表明两个人还不是好友关系，则直接返回错误信息
-    sql = "select {} from Friend where account_1={}".format(user_friend, user_request)
+    sql = "select * from Friend where account_1={} and account_2={}".format(user_friend, user_request)
     c.execute(sql)
     res = c.fetchone()
-    if res != None:
-        return json.dumps({
+    if res is None:
+        return {
             "function": "delete_friend",
             "error_code": 501,
             "error_message": "该用户不是你的好友",
             "data": None
-        })
+        }
     else:
             # 表明已经查询成功，需要重新对数据库进行操作
-            c.execute("delete from Friend where account_1={} and acount_2={}".format(user_request,user_friend))
+            c.execute("delete from Friend where account_1={} and account_2={}".format(user_request,user_friend))
             c.execute("delete from Friend where account_1={} and account_2={}".format(user_friend,user_request))
-            return json.dumps({
-                {
+            conn.commit()
+            return {
                     "function": "delete_friend",
                     "error_code": 0,
                     "error_message": "",
@@ -258,8 +274,16 @@ def delete_friends(conn,data):
                         {
                             "account": user_request
                         }
+                },{
+                    "function": "delete_friend",
+                    "error_code": 0,
+                    "error_message": "",
+                    "data":
+                        {
+                            "account": user_friend
+                        }
                 }
-            })
+
 
 
 
